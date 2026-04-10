@@ -1,0 +1,6 @@
+{
+    "mongo_url":"mongodb://localhost:27017/luxestay",
+    "jwtSecret":"jwtSecret",
+    "tokenExpire":"3600"
+    
+}

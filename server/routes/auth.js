@@ -5,33 +5,56 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-// Register
+// REGISTER
 router.post("/register", async (req, res) => {
-  const hashed = await bcrypt.hash(req.body.password, 10);
+  try {
+    const hashed = await bcrypt.hash(req.body.password, 10);
 
-  const user = new User({
-    username: req.body.username,
-    email: req.body.email,
-    password: hashed,
-  });
+    const user = new User({
+      username: req.body.username,
+      email: req.body.email,
+      password: hashed,
+    });
 
-  await user.save();
-  res.json("User created");
+    await user.save();
+
+    res.json({ message: "User created" });
+
+  } catch (err) {
+    res.status(500).json(err.message);
+  }
 });
 
-// Login
+// LOGIN 🔥 FIXED
 router.post("/login", async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
+  try {
+    const user = await User.findOne({ email: req.body.email });
 
-  if (!user) return res.status(404).json("User not found");
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-  const isMatch = await bcrypt.compare(req.body.password, user.password);
+    const isMatch = await bcrypt.compare(req.body.password, user.password);
 
-  if (!isMatch) return res.status(400).json("Wrong password");
+    if (!isMatch) {
+      return res.status(400).json({ message: "Wrong password" });
+    }
 
-  const token = jwt.sign({ id: user._id }, "SECRET_KEY");
+    const token = jwt.sign({ id: user._id }, "SECRET_KEY", {
+      expiresIn: "1d",
+    });
 
-  res.json({ token });
+    // 🔥 IMPORTANT: on renvoie user + token
+    res.json({
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+
+  } catch (err) {
+    res.status(500).json(err.message);
+  }
 });
 
 export default router;

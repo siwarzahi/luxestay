@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { TextField, Button, Card, CardContent, Typography } from "@mui/material";
 
@@ -7,30 +7,49 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
-  // Gérer les changements de champs
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Gérer la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
-      // Remplace l'URL par celle de ton backend si nécessaire
-      const res = await axios.post("http://localhost:5000/api/users/login", formData);
+      const res = await axios.post(
+        "http://localhost:5000/api/users/login",
+        formData
+      );
 
       if (res.data.token) {
-        // Stocker les infos de l'utilisateur dans localStorage
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ name: res.data.username, token: res.data.token })
-        );
+        // ✅ save auth
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("userId", res.data.userId);
+
         setMessage("Connexion réussie ✅");
-        setTimeout(() => navigate("/home"), 1000);
+
+        // 🔥 récupération data booking depuis Rooms
+        const data = location.state;
+
+        setTimeout(() => {
+          if (data?.room) {
+            // 👉 REDIRECTION VERS BOOKING
+            navigate("/booking", {
+              state: {
+                room: data.room,
+                checkIn: data.checkIn,
+                checkOut: data.checkOut,
+                guests: data.guests,
+              },
+            });
+          } else {
+            navigate("/");
+          }
+        }, 800);
       }
     } catch (error) {
       setMessage(error.response?.data?.message || "Mot de passe incorrect ❌");
@@ -68,6 +87,7 @@ const Login = () => {
               onChange={handleChange}
               required
             />
+
             <TextField
               label="Mot de passe"
               type="password"
@@ -78,6 +98,7 @@ const Login = () => {
               onChange={handleChange}
               required
             />
+
             <Button
               type="submit"
               variant="contained"

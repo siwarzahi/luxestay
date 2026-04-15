@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/login";
 import Rooms from "./pages/Rooms";
+import Booking from "./pages/Booking"; 
 
 const AppWrapper = () => {
   const location = useLocation();
@@ -17,6 +18,10 @@ const AppWrapper = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/rooms" element={<Rooms />} />
+          
+          {/* 🔥 AJOUT ICI */}
+          <Route path="/booking" element={<Booking />} />
+
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>

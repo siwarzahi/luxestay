@@ -1,69 +1,75 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const Rooms = () => {
-  const locationState = useLocation();
+  const { state } = useLocation();
+  const navigate = useNavigate();
 
   const [rooms, setRooms] = useState([]);
-  const [error, setError] = useState("");
 
-  // ⚠️ sécurisation des données
-  const destination = locationState.state?.destination;
-  const checkIn = locationState.state?.checkIn;
-  const checkOut = locationState.state?.checkOut;
-  const guests = locationState.state?.guests;
+  const destination = state?.destination || "";
+  const checkIn = state?.checkIn || "";
+  const checkOut = state?.checkOut || "";
+  const guests = state?.guests || 1;
 
   useEffect(() => {
-    if (!locationState.state) return; // ✅ OK ici (dans useEffect)
-
     const fetchRooms = async () => {
       try {
-        const res = await axios.post(
-          "http://localhost:5000/api/rooms/search",
-          { destination, checkIn, checkOut, guests }
-        );
+        const res = await axios.post("http://localhost:5000/api/rooms/search", {
+          destination,
+          checkIn,
+          checkOut,
+          guests,
+        });
+
         setRooms(res.data);
-      } catch (error) {
-        console.error(error);
-        setError("Erreur lors du chargement");
+      } catch (err) {
+        console.log(err);
       }
     };
 
-    fetchRooms();
-  }, [locationState.state]);
+    if (state) fetchRooms();
+  }, [state]);
 
-  // ✅ condition APRES les hooks
-  if (!locationState.state) {
-    return <p>Erreur : aucune donnée de recherche</p>;
+  const handleBooking = (room) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+      navigate("/login", {
+        state: { room, checkIn, checkOut, guests }
+      });
+    } else {
+      navigate("/booking", {
+        state: { room, checkIn, checkOut, guests }
+      });
+    }
+  };
+
+  if (!state) {
+    return <h3>Aucune recherche ❌</h3>;
   }
 
   return (
     <div className="container mt-5">
-      <h2>Chambres disponibles à {destination}</h2>
-
-      {error && <p className="text-danger">{error}</p>}
+      <h2>Chambres à {destination}</h2>
 
       <div className="row">
-        {rooms.length === 0 && <p>Aucune chambre disponible.</p>}
-
         {rooms.map((room) => (
           <div className="col-md-4 mb-4" key={room._id}>
-            <div className="card shadow-sm">
-              {room.imageUrls?.length > 0 && (
-                <img
-                  src={room.imageUrls[0]}
-                  className="card-img-top"
-                  alt={room.name}
-                />
-              )}
+            <div className="card">
+              <img src={room.imageUrls?.[0]} className="card-img-top" />
 
               <div className="card-body">
-                <h5 className="card-title">{room.name}</h5>
-                <p className="card-text">{room.description}</p>
-                <p className="card-text fw-bold">
-                  Prix: {room.price} TND
-                </p>
+                <h5>{room.name}</h5>
+                <p>{room.price} TND</p>
+
+                <button
+                  className="btn btn-primary"
+                  onClick={() => handleBooking(room)}
+                >
+                  Réserver
+                </button>
               </div>
             </div>
           </div>

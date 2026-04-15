@@ -25,7 +25,7 @@ const Navbar = () => {
       </h3>
 
       <div style={styles.menuContainer}>
-        <span style={{ marginRight: 20 }}> {name}!</span>
+        <span style={{ marginRight: 20 }}> {name}</span>
 
         <button
           style={styles.menuButton}
